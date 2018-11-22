@@ -1,3 +1,4 @@
+// 可以收到属性的变化通知并执行相应的函数，从而更新视图。
 function Watcher(vm, expFn, cb) {
     this.vm = vm;
     this.expFn = expFn;

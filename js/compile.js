@@ -1,4 +1,7 @@
-
+// 扫描和解析每个节点的相关指令，并根据初始化模板数据以及初始化相应的订阅器。
+// 指令解析器Compile：对每个节点元素进行扫描和解析，将相关指令对应初始化成一个订阅者Watcher，
+// 并替换模板数据或者绑定相应的函数，此时当订阅者Watcher接收到相应属性的变化，就会执行对应的更新函数，
+// 从而更新视图。
 function Compile(el, vm) {
     this.$vm = vm;
     this.$el = this.isElementNode(el) ? el : document.querySelector(el); // 判断是否为元素节点
@@ -49,11 +52,11 @@ Compile.prototype = {
         var nodeAttrs = node.attributes;
         [].slice.call(nodeAttrs).forEach(function (item) {
             var attrName = item.name;
-            if(_this.isDirective(attrName)) {
+            if(_this.isDirective(attrName)) { // 判断是否为指令 v-xxx
                 var value = item.value;
                 var temp = attrName.substring(2); // 提取属性的v-后面的关键字
 
-                if(_this.isEventDirective(temp)) { // 事件指令
+                if(_this.isEventDirective(temp)) { // 事件指令 onxxx
                     compileUtil.eventHandler(node, _this.$vm, value, temp)
                 } else {
                     compileUtil[temp] && compileUtil[temp](node, _this.$vm, value); // 这里只处理了v-model
@@ -109,7 +112,7 @@ var compileUtil = {
         })
     },
     eventHandler: function (node, vm, exp, tmp) { // 事件指令处理方法
-        var eventType = tmp.split(':')[1]; // 事件指令绑定的方法名
+        var eventType = tmp.split(':')[1]; // 事件指令绑定的方法名 onxxx中的xxx
         var fun = vm.$options.methods && vm.$options.methods[exp]; // 绑定的方法
 
         if(eventType && fun) {
