@@ -11,7 +11,7 @@ Observer.prototype = {
             enumerable: true, // 可枚举
             configurable: false, // 不能再define
             get: function() {
-                if(dep.target) { // 判断是否需要添加订阅者
+                if(Dep.target) { // 判断是否需要添加订阅者
                     dep.depend(); // 在这里添加一个订阅者
                 }
                 return value;
@@ -49,17 +49,16 @@ function Dep() { // 属性订阅器
 }
 Dep.prototype = {
     addArr: function(arr) { // 负责向订阅器Dep中添加属性
-        alert('add arr')
         this.arrs.push(arr);
     },
     depend: function() { 
         Dep.target.addDep(this); // 添加订阅器
     },
     notify: function() { // 如果数据有变化 通知所有订阅者
-        console.log('11111', this.arrs);
         this.arrs.forEach(function(arr){
             arr.update(); //更新属性
         })
     }
 }
 Dep.target = null; // 定义全局变量暂存watcher
+

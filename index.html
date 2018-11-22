@@ -22,7 +22,7 @@
         var vm = new MVVM ({
             el: '#mvvm',
             data: {
-                str: 'hello1',
+                str: 'hello',
                 home: {
                     str: 'word'
                 },
@@ -30,7 +30,6 @@
             },
             computed: {
                 printString: function () {
-                    console.log('1111111')
                     return this.str + ' ' + this.home.str + '!';
                 }
             },
