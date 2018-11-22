@@ -1,3 +1,3 @@
 # vue-data-binding
-- vue数据双向绑定原理分析和简单实现
+- vue数据双向绑定原理分析,实现简单的mvvm
 
