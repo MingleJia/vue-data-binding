@@ -2,7 +2,8 @@ function MVVM(options) {
     this.$options = options || {};
     var data = this._data = this.$options.data;
     var _this = this;
-
+    // 实际写的过程中发现调用data的属性时需要这样写demo._data.text，
+    // 肯定是没有demo.text这样写来的方便，所以就需要加一层代理进行转换
     Object.keys(data).forEach(function (key) { // 筛选出data中的所有属性，对其进行数据代理
         _this.proxyData(key);
     });

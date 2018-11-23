@@ -2,6 +2,9 @@
 // 指令解析器Compile：对每个节点元素进行扫描和解析，将相关指令对应初始化成一个订阅者Watcher，
 // 并替换模板数据或者绑定相应的函数，此时当订阅者Watcher接收到相应属性的变化，就会执行对应的更新函数，
 // 从而更新视图。
+
+// 页面上每一个与数据相关联的节点都含有一个Watcher，当数据发生变化是Watcher用于计算，是否需要更新该节点；
+// 数据的每一个属性都有一个Dep，当该属性发生变化时，Dep会通知与该数据相关联的Watcher来进行计算是否需要更新对应页面。
 function Compile(el, vm) {
     // 因为遍历解析的过程有多次操作dom节点，为提高性能和效率，
     // 会先将跟节点el转换成文档碎片fragment进行解析编译操作，
@@ -10,17 +13,23 @@ function Compile(el, vm) {
     this.$el = this.isElementNode(el) ? el : document.querySelector(el); // 判断是否为元素节点
 
     if(this.$el) {
-        this.$fragment = this.copyOriginalFragment(this.$el); // 复制原生节点
+        this.$fragment = this.nodeToFragment(this.$el); // 复制原生节点
         this.init(); // 初始化
-        this.$el.appendChild(this.$fragment); // 将节点添加到各节点中
+        this.$el.appendChild(this.$fragment); // 实现初始化的时候将数据渲染到视图上
     }
 }
 
 Compile.prototype = {
-    copyOriginalFragment: function (el) {
+    nodeToFragment: function (el) {
+        // 当要向document中添加大量数据是，如果逐个添加这些新节点，这个过程非常缓慢，
+        // 因为每添加一个节点都会调用父节点的appendChild()方法产生一次回流和重绘，
+        // 为了提高性能，可以使用一个文档碎片，把所有的新节点附加其上，
+        // 然后把文档碎片一次性添加到document中，减少了重新渲染的次数提高了性能。
         var fragment = document.createDocumentFragment(); // 创建元素
         var childElement;
 
+        // childElement = el.firstChild表示：appendChild是把一个节点给"移"到flag上，也就是说移动之后node里面就没有这个child节点了，
+        // 所以这样可以遍历node的所有孩子并把它们都移到文档碎片fragment上
         while(childElement = el.firstChild) { // 将原生节点拷贝到fragment 将el中的元素全部复制到fragment集中
             fragment.appendChild(childElement);
         }

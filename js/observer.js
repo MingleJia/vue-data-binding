@@ -5,7 +5,7 @@ function Observer(data) {
 }
 Observer.prototype = {
     defineReactive: function(data, key, value) {
-        var obj = observer(value); //通过递归方法，监听子属性
+        var obj = observer(value); //如果data中的属性是一个对象通过递归方法，监听子属性
         var dep = new Dep(); // new 消息订阅器Dep实例，负责维护一个数组，用来收集订阅者，数据变动触发notify，再调用订阅者的update方法，
 
         Object.defineProperty(data, key, {
@@ -13,7 +13,8 @@ Observer.prototype = {
             configurable: false, // 不能再define
             get: function() {
                 // 由于需要在闭包内添加watcher，所以通过Dep定义一个全局target属性，暂存watcher, 添加完移除
-                if(Dep.target) { // 判断是否需要添加订阅者
+                // JS的浏览器单线程特性，保证这个全局变量在同一时间内，只会有同一个监听器使用
+                if(Dep.target) { // 代码中有一个Dep.target值，这个值时用来区分是普通的get还是收集依赖时的get 判断是否需要添加订阅者
                     dep.depend(); // 在这里添加一个订阅者
                 }
                 return value;
