@@ -5,8 +5,8 @@ function Observer(data) {
 }
 Observer.prototype = {
     defineReactive: function(data, key, value) {
-        var obj = observer(value); //通过递归方法遍历所有子属性
-        var dep = new Dep(); // new 消息订阅器Dep实例
+        var obj = observer(value); //通过递归方法，监听子属性
+        var dep = new Dep(); // new 消息订阅器Dep实例，负责维护一个数组，用来收集订阅者，数据变动触发notify，再调用订阅者的update方法，
 
         Object.defineProperty(data, key, {
             enumerable: true, // 可枚举
@@ -23,7 +23,6 @@ Observer.prototype = {
                     return;
                 }
                 value = newVal;
-                console.log('属性' + key + '已经被监听了，现在值为：“' + newVal.toString() + '”');
                 obj = observer(value); // 新的值是object的话，进行监听
                 dep.notify(); // 如果数据变化，通知所有订阅者
             }
@@ -34,8 +33,9 @@ Observer.prototype = {
     },
     run: function (data) {
         var _this = this;
+        // Object.keys():返回一个数组,成员是参数对象自身的(不含继承的)所有可遍历(enumerable)属性的键名
         Object.keys(data).forEach(function (key) { // 遍历data中的所有属性
-            _this.convert(key, data[key]); // 为每个属性添加数据劫持方法
+            _this.convert(key, data[key]); // 为每个属性添加数据劫持方法 即defineReactive
         });
     },
 }
@@ -43,25 +43,25 @@ function observer(data, vm) { // 遍历所有子属性
     if (!data || typeof data !== 'object') {
         return;
     }
-    return new Observer(data);
+    return new Observer(data); // run函数
 }
 
 var uid = 0;
 // 消息订阅器Dep：专门收集属性相关的订阅者，然后在监听器Observer和订阅者Watcher之间进行统一管理
 function Dep() { // 属性订阅器
     this.id = uid++;
-    this.arrs = []; // 存储属性
+    this.subs = []; // 数组 存储属性 用来收集订阅者，数据变动触发notify，再调用订阅者的update方法
 }
 Dep.prototype = {
-    addArr: function(arr) { // 负责向订阅器Dep中添加属性
-        this.arrs.push(arr);
+    addSub: function(sub) { // 负责向订阅器Dep中添加属性
+        this.subs.push(sub);
     },
     depend: function() { 
         Dep.target.addDep(this); // 添加订阅器
     },
     notify: function() { // 如果数据有变化 通知所有订阅者
-        this.arrs.forEach(function(arr){
-            arr.update(); //更新属性
+        this.subs.forEach(function(sub){
+            sub.update(); //更新属性
         })
     }
 }

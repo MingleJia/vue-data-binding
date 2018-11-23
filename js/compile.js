@@ -1,8 +1,11 @@
-// 扫描和解析每个节点的相关指令，并根据初始化模板数据以及初始化相应的订阅器。
+// 解析器：扫描和解析每个节点的相关指令，并根据初始化模板数据以及初始化相应的订阅器。
 // 指令解析器Compile：对每个节点元素进行扫描和解析，将相关指令对应初始化成一个订阅者Watcher，
 // 并替换模板数据或者绑定相应的函数，此时当订阅者Watcher接收到相应属性的变化，就会执行对应的更新函数，
 // 从而更新视图。
 function Compile(el, vm) {
+    // 因为遍历解析的过程有多次操作dom节点，为提高性能和效率，
+    // 会先将跟节点el转换成文档碎片fragment进行解析编译操作，
+    // 解析完成，再将fragment添加回原来的真实dom节点中
     this.$vm = vm;
     this.$el = this.isElementNode(el) ? el : document.querySelector(el); // 判断是否为元素节点
 
@@ -18,7 +21,7 @@ Compile.prototype = {
         var fragment = document.createDocumentFragment(); // 创建元素
         var childElement;
 
-        while(childElement = el.firstChild) { // 将el中的元素全部复制到fragment集中
+        while(childElement = el.firstChild) { // 将原生节点拷贝到fragment 将el中的元素全部复制到fragment集中
             fragment.appendChild(childElement);
         }
 
@@ -27,13 +30,15 @@ Compile.prototype = {
     init: function () {
         this.compileElement(this.$fragment); // 解析fragment集的元素
     },
-    compileElement: function (el) {
+    // compileElement 遍历所有节点及其子节点，进行扫描解析编译，
+    // 调用对应的指令渲染函数进行数据渲染，并调用对应的指令更新函数进行绑定
+    compileElement: function (el) { // 遍历所有节点及其子节点，进行扫描解析编译，调用对应的指令渲染函数进行数据渲染，并调用对应的指令更新函数进行绑定
         var _this = this;
         var child = el.childNodes;
 
         [].slice.call(child).forEach(function (item) {
             var text = item.textContent; // 获得元素的文本属性
-            var reg = /\{\{(.*)\}\}/;
+            var reg = /\{\{(.*)\}\}/; // 表达式文本
 
             if(_this.isElementNode(item)) { // 判断是否为元素节点
                 _this.compile(item);
@@ -51,15 +56,18 @@ Compile.prototype = {
         var _this = this;
         var nodeAttrs = node.attributes;
         [].slice.call(nodeAttrs).forEach(function (item) {
-            var attrName = item.name;
+            // 规定：指令以 v-xxx 命名
+            // 如 <span v-text="content"></span> 中指令为 v-text
+            var attrName = item.name; // 本例中为 v-text
             if(_this.isDirective(attrName)) { // 判断是否为指令 v-xxx
-                var value = item.value;
-                var temp = attrName.substring(2); // 提取属性的v-后面的关键字
+                var value = item.value; // 本例中为 content
+                var dir = attrName.substring(2); // 提取属性的v-后面的关键字 本例中为 text
 
-                if(_this.isEventDirective(temp)) { // 事件指令 onxxx
-                    compileUtil.eventHandler(node, _this.$vm, value, temp)
+                if(_this.isEventDirective(dir)) { // 事件指令 如 v-on:click
+                    compileUtil.eventHandler(node, _this.$vm, value, dir)
                 } else {
-                    compileUtil[temp] && compileUtil[temp](node, _this.$vm, value); // 这里只处理了v-model
+                    // 普通指令
+                    compileUtil[dir] && compileUtil[dir](node, _this.$vm, value); // 这里只处理了v-model
                 }
                 node.removeAttribute(attrName); // 移除已读取处理过的dom节点上设置的属性
             }
@@ -103,16 +111,20 @@ var compileUtil = {
 
         })
     },
+    // 监听数据、绑定更新函数的处理是在compileUtil.bind()这个方法中，
+    // 通过new Watcher()添加回调来接收数据变化的通知
     bind: function (node, vm, exp, tmp) {
         var updaterFn = updater[tmp + 'Updater'];
+        // 第一次初始化视图
         updaterFn && updaterFn(node, this._getVMVal(vm, exp));
-
+        // 实例化订阅者，此操作会在对应的属性消息订阅器中添加了该订阅者watcher
         new Watcher(vm, exp, function (value, originalValue) {
+            // 一旦属性值有变化，会收到通知执行此更新函数，更新视图
             updaterFn && updaterFn(node, value, originalValue);
         })
     },
     eventHandler: function (node, vm, exp, tmp) { // 事件指令处理方法
-        var eventType = tmp.split(':')[1]; // 事件指令绑定的方法名 onxxx中的xxx
+        var eventType = tmp.split(':')[1]; // 事件指令绑定的方法名 v-on:click中的click
         var fun = vm.$options.methods && vm.$options.methods[exp]; // 绑定的方法
 
         if(eventType && fun) {
@@ -141,7 +153,7 @@ var compileUtil = {
 
     }
 };
-
+// 更新函数
 var updater = {
     textUpdater: function (node, value) { // 文本内容更新
         node.textContent = typeof value == 'undefined' ? '' : value;

@@ -1,4 +1,4 @@
-// 可以收到属性的变化通知并执行相应的函数，从而更新视图。
+// 订阅者：可以收到属性的变化通知并执行相应的函数，从而更新视图。
 function Watcher(vm, expFn, cb) {
     this.vm = vm;
     this.expFn = expFn;
@@ -10,7 +10,7 @@ function Watcher(vm, expFn, cb) {
     } else {
         this.getter = this.parseGetter(expFn); // 从getter中解析出function
     }
-
+    // 此处为了触发属性的getter，从而在dep添加自己，结合Observer更易理解
     this.value = this.get();
 }
 
@@ -29,13 +29,13 @@ Watcher.prototype = {
     },
     addDep: function(dep) { // 添加订阅器的方法
         if(!this.depIds.hasOwnProperty(dep.id)) {
-            dep.addArr(this);
+            dep.addSub(this);
             this.depIds[dep.id] = dep;
         }
     },
     get: function() {
         Dep.target = this; // 将当前订阅者指向自己
-        var value = this.getter.call(this.vm, this.vm); // 将自己添加到属性订阅器中 
+        var value = this.getter.call(this.vm, this.vm); // 这里会触发属性的getter，从而添加订阅者 将自己添加到属性订阅器中 
         Dep.target = null; // 添加完毕后，释放闭包中的变量
         return value; // 返回从订阅器中获取的属性最新值
     },
