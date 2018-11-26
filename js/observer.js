@@ -7,7 +7,7 @@ Observer.prototype = {
     defineReactive: function(data, key, value) {
         var obj = observer(value); //如果data中的属性是一个对象通过递归方法，监听子属性
         var dep = new Dep(); // new 消息订阅器Dep实例，负责维护一个数组，用来收集订阅者，数据变动触发notify，再调用订阅者的update方法，
-
+        // Object.defineProperty 是仅 ES5 支持，且无法 shim 的特性，这也就是为什么 Vue 不支持 IE8 以及更低版本浏览器的原因。
         Object.defineProperty(data, key, {
             enumerable: true, // 可枚举
             configurable: false, // 不能再define

@@ -47,15 +47,15 @@ Compile.prototype = {
 
         [].slice.call(child).forEach(function (item) {
             var text = item.textContent; // 获得元素的文本属性
-            var reg = /\{\{(.*)\}\}/; // 表达式文本
+            var reg = /\{\{(.*)\}\}/; // {{}}形式的指令
 
             if(_this.isElementNode(item)) { // 判断是否为元素节点
                 _this.compile(item);
-            } else if (_this.isTextNode(item) && reg.test(text)){ // 判断是否为文本内容
+            } else if (_this.isTextNode(item) && reg.test(text)){ // 判断是否是符合这种形式{{}}的指令
                 _this.compileText(item, RegExp.$1); // 与正则表达式匹配的第一个子匹配的字符串
             }
 
-            if(item.childNodes && item.childNodes.length) { // 遍历子元素
+            if(item.childNodes && item.childNodes.length) { // 继续遍历子元素
                 _this.compileElement(item);
             }
         });
@@ -75,7 +75,7 @@ Compile.prototype = {
                 if(_this.isEventDirective(dir)) { // 事件指令 如 v-on:click
                     compileUtil.eventHandler(node, _this.$vm, value, dir)
                 } else {
-                    // 普通指令
+                    // 普通指令 本例中为v-model v-text
                     compileUtil[dir] && compileUtil[dir](node, _this.$vm, value); // 这里只处理了v-model
                 }
                 node.removeAttribute(attrName); // 移除已读取处理过的dom节点上设置的属性
